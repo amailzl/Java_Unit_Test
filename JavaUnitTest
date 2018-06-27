@@ -1,0 +1,109 @@
+package net.suntec.merbok.media.tests;
+
+import android.content.Context;
+import android.os.IBinder;
+import android.support.annotation.VisibleForTesting;
+import android.os.RemoteException;
+
+import org.junit.After;
+import org.junit.BeforeClass;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.Assert;
+import org.junit.runner.RunWith;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.junit.MockitoJUnitRunner;
+
+import static org.junit.Assert.*;
+import static org.mockito.Mockito.*;
+
+import net.suntec.merbok.media.beep.BeepManager;
+import net.suntec.merbok.media.beep.IBeepService;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method; 
+import java.lang.*;
+import java.lang.Exception;
+import android.util.Log;
+import java.lang.IllegalAccessException;
+
+@RunWith(MockitoJUnitRunner.class)
+public class BeepManagerUnitTest{
+	private static String TAG = "BeepManagerUnitTest";
+
+	private Class<?> BeepManagerGlobalClazz = null;
+
+	@Mock
+	IBeepService mockIBeepservice;
+
+	private BeepManager testBeepManager;
+
+	@Before
+	public void setUp(){
+	    testBeepManager = new BeepManager(null);
+Log.i(TAG,"setup start!");
+		Class<BeepManager> BeepManagerClazz = BeepManager.class;
+		for(Class c:BeepManagerClazz.getDeclaredClasses()) {
+		  Log.i(TAG,"class name:" + c.getName());
+		    if(c.getName().equals("net.suntec.merbok.media.beep.BeepManager$BeepManagerGlobal")) {
+			BeepManagerGlobalClazz = c;
+			break;
+		    }
+		}
+	}
+	@After
+	public void teardown(){
+		testBeepManager = null;
+	}
+
+	@Test
+	public void test_beepSoundOutputBeepServiceNull(){
+
+	try{
+		Method method = BeepManagerGlobalClazz.getDeclaredMethod("get", null);
+		Field mBeepServiceField = BeepManagerGlobalClazz.getDeclaredField("mBeepService");
+		mBeepServiceField.setAccessible(true);
+		mBeepServiceField.set( method.invoke(BeepManagerGlobalClazz), null);
+	} catch(Exception e) {
+		Log.i(TAG, "getDeclaredField failed:" + e);
+	}
+
+	testBeepManager.beepSoundOutput(1);
+
+        try{
+            Mockito.verify(mockIBeepservice,Mockito.never()).beepSoundOutput(Mockito.anyInt());
+        } catch (RemoteException e){
+            Assert.assertEquals(2, 1);
+        }
+    }
+
+	@Test
+	public void test_beepSoundOutputBeepServiceNotNull(){
+
+		if(null != BeepManagerGlobalClazz) {
+			try{
+		 		Method method = BeepManagerGlobalClazz.getDeclaredMethod("get", null);
+				Field mBeepServiceField = BeepManagerGlobalClazz.getDeclaredField("mBeepService");
+				mBeepServiceField.setAccessible(true);
+			        mBeepServiceField.set( method.invoke(BeepManagerGlobalClazz), mockIBeepservice);
+			} catch(Exception e) {
+			    Log.i(TAG, "getDeclaredField failed:" + e);
+			}
+			testBeepManager.beepSoundOutput(1);
+		}
+		try{
+			 Mockito.verify(mockIBeepservice).beepSoundOutput(1);
+		} catch (RemoteException e){
+			Assert.assertEquals(2, 1);
+		}
+	}
+}
+
+
+
+
+
+
+
+
+
